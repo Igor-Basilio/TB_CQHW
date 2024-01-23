@@ -1,1 +1,1 @@
-# TB_CQHW
+# Repositório Trabalho de Computação Quantica

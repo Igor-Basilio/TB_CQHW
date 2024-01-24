@@ -8,9 +8,9 @@ USE ieee_proposed.float_pkg.all;
 LIBRARY work;
 USE work.types_package.all;
 
--- * * * * * * * --
--- Main package * --
--- * * * * * * * --
+ -- * * * * * * * --
+-- * Main package * --
+ -- * * * * * * * --
 
 PACKAGE main_package IS
 
@@ -20,15 +20,15 @@ PACKAGE main_package IS
                                  (r => to_float(0), i => to_float(0)), 
                                  (r => to_float(0), i => to_float(1)));
 
-  constant hadamard_m : matrix4 := ((r => to_float(1), i => to_float(0)), 
-                                    (r => to_float(0), i => to_float(0)), 
-                                    (r => to_float(0), i => to_float(0)), 
-                                    (r => to_float(0), i => to_float(1)));
+  constant hadamard_m : matrix4 := ((r => to_float(0.707106), i => to_float(0)), 
+                                    (r => to_float(0.707106), i => to_float(0)), 
+                                    (r => to_float(0.707106), i => to_float(0)), 
+                                    (r => to_float(-0.707106), i => to_float(0)));
   
   constant xgate_m : matrix4 := ((r => to_float(0), i => to_float(0)), 
                                  (r => to_float(1), i => to_float(0)), 
                                  (r => to_float(1), i => to_float(0)), 
-                                 (r => to_float(0), i => to_float(1)));
+                                 (r => to_float(0), i => to_float(0)));
   
   constant identity_m : matrix4 := ((r => to_float(1), i => to_float(0)), 
                                     (r => to_float(0), i => to_float(0)), 
@@ -49,6 +49,7 @@ PACKAGE main_package IS
   function "*" (a: qcomplex; b: qcomplex) return qcomplex;
   function "+" (a: qcomplex; b: qcomplex) return qcomplex;
   function "-" (a: qcomplex; b: qcomplex) return qcomplex;
+  function complex_toreal ( a: matrix2 ) return matrix2_real;
   
   -- Quantum Gates
   function Z_gate ( q: matrix2 ) return matrix2 ;
@@ -63,9 +64,11 @@ PACKAGE main_package IS
 
   component Bernstein_Vazirani is
 
-  port( reset, clk : std_logic;
+  port( reset, clk : in std_logic;
         secret_number : in std_logic_vector( 7 downto 0 );
-        result : out std_logic_vector( 7 downto 0 )
+        ctrl : in std_logic_vector( 3 downto 0 );
+        result : out std_logic_vector( 7 downto 0 );
+        result_had : out matrix2_array( 8 downto 0 ) 
       );
     
   end component;
@@ -86,6 +89,30 @@ package body main_package is
 
   -- Operators Implementation
 
+  function complex_toreal ( a: matrix2 ) return matrix2_real is
+
+    variable result : matrix2_real;
+    variable temp : matrix2_sulv;
+    
+    begin
+
+    -- Function that transforms a qcomplex into a qreal
+    -- for display purposes.
+      
+    temp.c0.r := to_sulv( to_float64( a.c0.r ) );
+    temp.c0.i := to_sulv( to_float64( a.c0.i ) );
+    temp.c1.r := to_sulv( to_float64( a.c1.r ) );
+    temp.c1.i := to_sulv( to_float64( a.c1.i ) );
+
+    result.c0.r := bitstoreal( temp.c0.r );
+    result.c0.i := bitstoreal( temp.c0.i );
+    result.c1.r := bitstoreal( temp.c1.r );
+    result.c1.i := bitstoreal( temp.c1.i );
+
+    return result;
+      
+  end complex_toreal;
+  
   function "+" (a: qcomplex; b: qcomplex) return qcomplex is
     
     variable result: qcomplex;
@@ -256,7 +283,7 @@ package body main_package is
     begin
     
     -- fasec is defined as matrix4 in the start of the package
-    -- Doing the multiplication P * Q 
+    -- Doing the multiplication S * Q 
     
     rs.c0 := fasec_m.c0 * q.c0 + fasec_m.c1 * q.c1;
 
@@ -295,7 +322,7 @@ package body main_package is
       -- Of two complex numbers ( a + bi ) * ( c + di )
       -- ** Defined in the operator overloaded functions **
     
-      rs.c0 := hadamard_m.c0 * q.c0 + hadamard_m.c1 * q.c1;
+      rs.c0 := hadamard_m.c0 * q.c0 + hadamard_m.c1 * q.c1 ;
 
       rs.c1 := hadamard_m.c2 * q.c0 + hadamard_m.c3 * q.c1 ;
     

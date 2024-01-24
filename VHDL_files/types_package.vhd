@@ -61,6 +61,8 @@ PACKAGE types_package IS
   end record;
   
   type matrix2_array is array ( natural range <> ) of matrix2;
+  type real_array is array ( natural range <> ) of real;
+  type matrix2_realarray is array ( natural range <> ) of matrix2_real;
   type matrix4_array is array ( natural range <> ) of matrix4;
   
 end types_package;

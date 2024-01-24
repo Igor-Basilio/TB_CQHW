@@ -445,7 +445,7 @@ package float_pkg is
 
   -- sulv to float
   function to_float (
-    arg      : STD_ULOGIC_;
+    arg      : STD_ULOGIC_VECTOR;
     size_res : UNRESOLVED_float)
     return UNRESOLVED_float;
 

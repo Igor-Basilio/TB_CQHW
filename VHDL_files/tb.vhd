@@ -18,7 +18,7 @@ architecture arq of tb is
   -- Inputs
 
   signal reset, clk : std_logic ;
-  signal ctrl : std_logic_vector( 2 downto 0 ) ;
+  signal ctrl : std_logic_vector( 3 downto 0 ) ;
   signal a : matrix2 ;
   signal secret_number : std_logic_vector( 7 downto 0) := "01010010";
   
@@ -26,13 +26,9 @@ architecture arq of tb is
   
   signal o : matrix2;
   signal result : std_logic_vector( 7 downto 0 );
-  
-  -- Signals to show floating point reals ( 32 bit )
-
-  signal a_r, o_r : matrix2_real;
-
-  signal a_v, o_v : matrix2_sulv;
-  
+  signal result_had : matrix2_array( secret_number'length downto 0 );
+  signal result_hadreal : matrix2_realarray ( secret_number'length downto 0 );
+    
   -- Internal Counter
 
   signal counter : integer := 0;
@@ -43,48 +39,20 @@ architecture arq of tb is
   
   begin
     
-  UUT : Bernstein_Vazirani port map ( reset, clk, secret_number, result );
+  UUT : Bernstein_Vazirani port map ( reset, clk, secret_number, ctrl, result, result_had );
   
   reset <= '1' , '0' after 10 ns, 
                  '1' after 20 ns;
 
---  a.c0.r <= to_float(1);
- -- a.c0.i <= to_float(0);  -- | Phy > = | 0 > 
+  tr : for i in result_hadreal'length - 1 downto 0 generate
+    
+    result_hadreal(i) <= complex_toreal( result_had(i) );
 
---  a.c1.r <= to_float(0);
- -- a.c1.i <= to_float(0);
+  end generate;
   
-  -- Conversion to FP for displaying purposes.
-  
---  convert : process(  a, o, a_v, o_v )
-
---  begin
-
---    a_v.c0.r <= to_sulv( to_float64( a.c0.r ) );
- --   a_v.c0.i <= to_sulv( to_float64( a.c0.i ) );
- --   a_v.c1.r <= to_sulv( to_float64( a.c1.r ) );
- --   a_v.c1.i <= to_sulv( to_float64( a.c1.i ) );
-
---    o_v.c0.r <= to_sulv( to_float64( o.c0.r ) );
- --   o_v.c0.i <= to_sulv( to_float64( o.c0.i ) );
- --   o_v.c1.r <= to_sulv( to_float64( o.c1.r ) );
- --   o_v.c1.i <= to_sulv( to_float64( o.c1.i ) );
-    
---    a_r.c0.r <= bitstoreal( a_v.c0.r );
- --   a_r.c0.i <= bitstoreal( a_v.c0.i );
- --   a_r.c1.r <= bitstoreal( a_v.c1.r );
- --   a_r.c1.i <= bitstoreal( a_v.c1.i );
-
- --   o_r.c0.r <= bitstoreal( o_v.c0.r );
- --   o_r.c0.i <= bitstoreal( o_v.c0.i );
---    o_r.c1.r <= bitstoreal( o_v.c1.r );
---    o_r.c1.i <= bitstoreal( o_v.c1.i );
-    
---  end process;
-    
   clock : process
   begin
-    clk <= '1' , '0' after 5 ns;
+    clk <= '0' , '1' after 5 ns;
     wait for 10 ns;
   end process;
 
@@ -98,10 +66,10 @@ architecture arq of tb is
     
     while( counter <= 1000 ) loop
 
-          ctrl <= "001";
+          ctrl <= "0000";
           wait until rising_edge(clk);
 
-          ctrl <= "010";          
+          ctrl <= "0001";
           wait until rising_edge(clk);
           
           counter <= counter + 1;

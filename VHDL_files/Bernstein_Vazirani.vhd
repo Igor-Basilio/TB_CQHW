@@ -11,9 +11,11 @@ USE ieee_proposed.float_pkg.all;
 
 entity Bernstein_Vazirani is
 
-  port( reset, clk : std_logic;
+  port( reset, clk : in std_logic;
         secret_number : in std_logic_vector( 7 downto 0 );
-        result : out std_logic_vector( 7 downto 0 )
+        ctrl : in std_logic_vector( 3 downto 0 );
+        result : out std_logic_vector( 7 downto 0 );
+        result_had : out matrix2_array( 8 downto 0 ) 
       );
     
 end Bernstein_Vazirani;
@@ -26,7 +28,9 @@ architecture behave of Bernstein_Vazirani is
   
 begin
 
-  q <= secret_number ;
+  q <= secret_number;
+
+  result_had <= matrix_array;
   
   -- Initialize all qbits ( length of the secret_number + 1 )
   -- To start state | Phy > = | 0 > = ( 1, 0 )
@@ -36,51 +40,54 @@ begin
 
     if rising_edge( clk ) then
       
-      for i in matrix_array'range loop
+      if ctrl = "0000" then
 
-        matrix_array(i).c0.r <= to_float(1);
-        matrix_array(i).c0.i <= to_float(0);
-        matrix_array(i).c1.r <= to_float(0);
-        matrix_array(i).c1.i <= to_float(0);
-        
-      end loop;
+        for i in matrix_array'range loop
 
-      -- Hadamard applied to all ( n - 1 ) qbits
-      -- Given that the last qbit needs the X gate first
-      for i in q'length - 1 downto 0 loop     
-        matrix_array(i) <= hadamard( matrix_array(i) );
-      end loop;
-
-      matrix_array( q'length ) <=
-        X_gate ( matrix_array( q'length ) );
-
-      matrix_array( q'length ) <=
-        hadamard ( matrix_array( q'length ) );
-
-      -- Applyin Controlled Not on all active Bits on the
-      -- Secret number
-      for i in q'length - 1 downto 0 loop
-
-        if q(i) = '1' then
-
-          matrix_array4(i) <= CX_gate( matrix_array(i), matrix_array( q'length ) );
+          matrix_array(i).c0.r <= to_float(1);
+          matrix_array(i).c0.i <= to_float(0);
+          matrix_array(i).c1.r <= to_float(0);
+          matrix_array(i).c1.i <= to_float(0);
           
-        end if;
-        
-      end loop;
+        end loop;
 
-      for i in q'length - 1 downto 0 loop
-        
-        if q(i) = '1' then
-          
-          matrix_array4(i) <= hadamard4( matrix_array4(i) );
-          
-        end if;
-        
-      end loop;
-
+      elsif ctrl = "0001" then
       
-    end if;
+        -- Hadamard applied to all ( n - 1 ) qbits
+        -- Given that the last qbit needs the X gate first
+        for i in q'length - 1 downto 0 loop     
+          matrix_array(i) <= hadamard( matrix_array(i) );
+        end loop;
+
+        matrix_array( q'length ) <=
+          hadamard ( X_gate ( matrix_array( q'length ) ) ) ;
+
+      end if ;
+
+      --- Não testei VVVVV
+    --   -- Applyin Controlled Not on all active Bits on the
+    --   -- Secret number
+    --   for i in q'length - 1 downto 0 loop
+
+    --     if q(i) = '1' then
+
+    --       matrix_array4(i) <= CX_gate( matrix_array(i), matrix_array( q'length ) );
+          
+    --     end if;
+        
+    --   end loop;
+
+    --   for i in q'length - 1 downto 0 loop
+        
+    --     if q(i) = '1' then
+          
+    --       matrix_array4(i) <= hadamard4( matrix_array4(i) );
+          
+    --     end if;
+        
+    --   end loop;
+     
+     end if;
     
   end process;
   
